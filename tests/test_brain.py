@@ -1,10 +1,14 @@
 from cobe.brain import Brain, CobeError
 from cobe.tokenizers import MegaHALTokenizer
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import os
 import unittest
 
 TEST_BRAIN_FILE = "test_cobe.brain"
+
 
 class testInit(unittest.TestCase):
     def setUp(self):
@@ -13,12 +17,12 @@ class testInit(unittest.TestCase):
 
     def testInit(self):
         Brain.init(TEST_BRAIN_FILE)
-        self.failUnless(os.path.exists(TEST_BRAIN_FILE),
+        self.assertTrue(os.path.exists(TEST_BRAIN_FILE),
                         "missing brain file after init")
 
         brain = Brain(TEST_BRAIN_FILE)
-        self.failUnless(brain.order, "missing brain order after init")
-        self.failUnless(brain._end_token_id,
+        self.assertTrue(brain.order, "missing brain order after init")
+        self.assertTrue(brain._end_token_id,
                         "missing brain _end_token_id after init")
 
     def testInitWithOrder(self):
@@ -38,7 +42,7 @@ class testInit(unittest.TestCase):
         Brain.init(TEST_BRAIN_FILE)
 
         brain = Brain(TEST_BRAIN_FILE)
-        self.assert_(brain.reply("") is not "")
+        self.assertNotEqual(brain.reply(""), "")
 
     def testWrongVersion(self):
         Brain.init(TEST_BRAIN_FILE)
@@ -51,8 +55,8 @@ class testInit(unittest.TestCase):
 
         try:
             Brain(TEST_BRAIN_FILE)
-        except CobeError, e:
-            self.assert_("cannot read a version" in str(e))
+        except CobeError as e:
+            self.assertIn("cannot read a version", str(e))
         else:
             self.fail("opened a wrong version brain file")
 
@@ -102,6 +106,7 @@ class testInit(unittest.TestCase):
         get_info_text = lambda: pickle.loads(
             db.get_info_text(key, text_factory=str))
 
+
 class testLearn(unittest.TestCase):
     def setUp(self):
         if os.path.exists(TEST_BRAIN_FILE):
@@ -113,24 +118,24 @@ class testLearn(unittest.TestCase):
 
         tokens = ["this", Brain.SPACE_TOKEN_ID, "is", Brain.SPACE_TOKEN_ID,
                   "a", Brain.SPACE_TOKEN_ID, "test"]
-        self.assertEquals(list(brain._to_edges(tokens)),
-                          [((1, 1), False),
-                           ((1, "this"), False),
-                           (("this", "is"), True),
-                           (("is", "a"), True),
-                           (("a", "test"), True),
-                           (("test", 1), False),
-                           ((1, 1), False)])
+        self.assertEqual(list(brain._to_edges(tokens)),
+                         [((1, 1), False),
+                          ((1, "this"), False),
+                          (("this", "is"), True),
+                          (("is", "a"), True),
+                          (("a", "test"), True),
+                          (("test", 1), False),
+                          ((1, 1), False)])
 
         tokens = ["this", "is", "a", "test"]
-        self.assertEquals(list(brain._to_edges(tokens)),
-                          [((1, 1), False),
-                           ((1, "this"), False),
-                           (("this", "is"), False),
-                           (("is", "a"), False),
-                           (("a", "test"), False),
-                           (("test", 1), False),
-                           ((1, 1), False)])
+        self.assertEqual(list(brain._to_edges(tokens)),
+                         [((1, 1), False),
+                          ((1, "this"), False),
+                          (("this", "is"), False),
+                          (("is", "a"), False),
+                          (("a", "test"), False),
+                          (("test", 1), False),
+                          ((1, 1), False)])
 
     def testExpandGraph(self):
         Brain.init(TEST_BRAIN_FILE, order=2)
@@ -139,13 +144,13 @@ class testLearn(unittest.TestCase):
         tokens = ["this", Brain.SPACE_TOKEN_ID, "is", Brain.SPACE_TOKEN_ID,
                   "a", Brain.SPACE_TOKEN_ID, "test"]
 
-        self.assertEquals(list(brain._to_graph(brain._to_edges(tokens))),
-                          [((1, 1), False, (1, "this")),
-                           ((1, "this"), True, ("this", "is")),
-                           (("this", "is"), True, ("is", "a")),
-                           (("is", "a"), True, ("a", "test")),
-                           (("a", "test"), False, ("test", 1)),
-                           (("test", 1), False, (1, 1))])
+        self.assertEqual(list(brain._to_graph(brain._to_edges(tokens))),
+                         [((1, 1), False, (1, "this")),
+                          ((1, "this"), True, ("this", "is")),
+                          (("this", "is"), True, ("is", "a")),
+                          (("is", "a"), True, ("a", "test")),
+                          (("a", "test"), False, ("test", 1)),
+                          (("test", 1), False, (1, 1))])
 
     def testLearn(self):
         Brain.init(TEST_BRAIN_FILE, order=2)

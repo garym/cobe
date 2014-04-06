@@ -14,6 +14,12 @@ from .brain import Brain
 
 log = logging.getLogger("cobe")
 
+# python compatibility:
+try:
+    input = raw_input
+except NameError:
+    pass
+
 
 class InitCommand:
     @classmethod
@@ -49,7 +55,7 @@ def progress_generator(filename):
     size_left = s.st_size
 
     fd = open(filename)
-    for line in fd.xreadlines():
+    for line in fd:
         size_left = size_left - len(line)
         progress = 100 * (1. - (float(size_left) / float(s.st_size)))
 
@@ -72,7 +78,7 @@ class LearnCommand:
 
         for filename in args.file:
             now = time.time()
-            print filename
+            print(filename)
 
             count = 0
             for line, progress in progress_generator(filename):
@@ -91,7 +97,7 @@ class LearnCommand:
                     b.graph.commit()
 
             elapsed = time.time() - now
-            print "\r100%% (%d/s)" % (count / elapsed)
+            print(("\r100%% (%d/s)" % (count / elapsed)))
 
         b.stop_batch_learning()
 
@@ -120,7 +126,7 @@ class LearnIrcLogCommand:
 
         for filename in args.file:
             now = time.time()
-            print filename
+            print(filename)
 
             count = 0
             for line, progress in progress_generator(filename):
@@ -150,7 +156,7 @@ class LearnIrcLogCommand:
                     b.reply(msg)
 
             elapsed = time.time() - now
-            print "\r100%% (%d/s)" % (count / elapsed)
+            print(("\r100%% (%d/s)" % (count / elapsed)))
 
         b.stop_batch_learning()
 
@@ -204,13 +210,13 @@ class ConsoleCommand:
 
         while True:
             try:
-                cmd = raw_input("> ")
+                cmd = input("> ")
             except EOFError:
-                print
+                print()
                 sys.exit(0)
 
             b.learn(cmd)
-            print b.reply(cmd).encode("utf-8")
+            print(b.reply(cmd))
 
 
 class IrcClientCommand:
